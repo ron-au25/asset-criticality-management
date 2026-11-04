@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>AIM_Condition__c</fullName><description>AIM §6.3</description><label>AIM Condition</label><formula>CASE(TEXT(SDO_Service_Perform_Status__c), "High","Good (1)", "Medium","Average (2)", "Low","Poor (3)", "Not Assessed")</formula><formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs><type>Text</type></CustomField>

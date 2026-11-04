@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types><members>ACM_AssetTimelineController</members><members>ACM_AssetTimelineControllerTest</members><members>ACM_TelematicsController</members><members>ACM_TelematicsControllerTest</members><name>ApexClass</name></types>
+    <types><members>acmAssetHealth</members><members>acmAssetTimeline</members><members>acmTelematicsSimulation</members><name>LightningComponentBundle</name></types>
+    <types><members>Asset.AIM_Category__c</members><members>Asset.AIM_Condition__c</members><members>Asset.AIM_Impact_Score__c</members><members>Asset.Associated_Compliance__c</members><members>Asset.Criticality_Indicator__c</members><members>Asset.Criticality_Rating__c</members><members>Asset.Criticality_Review_Date__c</members><members>Asset.Criticality_Score__c</members><members>Asset.Data_Quality_Status__c</members><members>Asset.Lifespan_Years__c</members><members>Asset.Replacement_Cost__c</members><members>Asset.Service_Type__c</members><members>Case.Location__c</members><members>ACM_Simulation_Config__mdt.Account_Name__c</members><members>ACM_Simulation_Config__mdt.Attribute_Developer_Name__c</members><members>ACM_Simulation_Config__mdt.Breach_Value__c</members><members>ACM_Simulation_Config__mdt.Default_Threshold__c</members><members>ACM_Simulation_Config__mdt.Normal_Value__c</members><members>ACM_Simulation_Config__mdt.Territory_Name__c</members><members>ACM_Simulation_Config__mdt.Threshold_Criteria_Name__c</members><members>ACM_Simulation_Config__mdt.Unit__c</members><members>ACM_Simulation_Config__mdt.Work_Order_Subject__c</members><members>ACM_Simulation_Config__mdt.Work_Type_Name__c</members><name>CustomField</name></types>
+    <types><members>ACM_Simulation_Config__mdt</members><name>CustomObject</name></types>
+    <types><members>ACM_Assess_Criticality</members><name>Flow</name></types>
+    <types><members>Asset.ACM_Assess_Criticality</members><name>QuickAction</name></types>
+    <types><members>ACM_Simulation_Config.Default</members><name>CustomMetadata</name></types>
+    <types><members>ACM_Band_Amber</members><members>ACM_Band_Green</members><members>ACM_Band_Red</members><name>StaticResource</name></types>
+    <types><members>ACM_User</members><name>PermissionSet</name></types>
+    <version>66.0</version>
+</Package>

@@ -1,0 +1,47 @@
+<template>
+    <lightning-card title="BMS Connection" icon-name="standard:data_streams">
+        <div class="slds-p-horizontal_medium">
+            <template if:true={busy}>
+                <lightning-spinner alternative-text="Syncing with BMS" size="small"></lightning-spinner>
+            </template>
+            <template if:true={error}>
+                <div class="slds-text-color_error">{error}</div>
+            </template>
+            <template if:true={notMonitored}>
+                <div class="slds-text-color_weak">This asset is not connected to the BMS.</div>
+            </template>
+            <template if:true={d}>
+                <template if:true={d.monitored}>
+                    <div class="chips">
+                        <span class="chip chip-green"><lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>Monitored</span>
+                        <span class="chip chip-green"><span class="pulse"></span>Connection {d.connection}</span>
+                        <span class="chip chip-grey"><lightning-icon icon-name="utility:clock" size="xx-small"></lightning-icon>Last sync {lastSyncLabel}</span>
+                        <lightning-button class="refresh-btn" variant="brand" label="Refresh Now" icon-name="utility:refresh" onclick={handleRefresh} disabled={busy}></lightning-button>
+                    </div>
+                    <div class="reading">
+                        <div class="attr">{d.attribute}</div>
+                        <div class="value-row">
+                            <span class={valueClass}>{valueLabel}</span>
+                            <span class="unit">kPa</span>
+                            <span class={statusClass}>{statusLabel}</span>
+                        </div>
+                        <div class="bar"><div class={fillClass} style={fillStyle}></div><div class="limit" style={limitStyle}></div></div>
+                        <div class="scale"><span>0</span><span>Limit {thresholdLabel} kPa</span></div>
+                    </div>
+                    <template if:true={d.woId}>
+                        <div class="wo">
+                            <lightning-icon icon-name="standard:work_order" size="small"></lightning-icon>
+                            <div class="wo-text">
+                                <a href={woHref} class="wo-link" onclick={handleWoClick}>{d.woSubject}</a>
+                                <div class="wo-sub">{d.woNumber} &middot; Priority {d.woPriority}</div>
+                            </div>
+                        </div>
+                    </template>
+                    <template if:true={d.breached}>
+                        <div class="reset"><a href="#" onclick={handleReset}>Reset demo reading to 1,800 kPa</a></div>
+                    </template>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Default_Threshold__c</fullName>
+    <label>Default Threshold</label>
+    <description>Threshold used when the criteria rule cannot be found.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <precision>18</precision>
+    <scale>2</scale>
+    <type>Number</type>
+</CustomField>

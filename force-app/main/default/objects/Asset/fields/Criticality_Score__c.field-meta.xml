@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Criticality_Score__c</fullName><description>AIM §6.4 impact x condition, 0 = not assessed</description><label>Criticality Score</label><formula>CASE(TEXT(ConsequenceOfFailure),"Minor",1,"Moderate",2,"Major",3,0) * CASE(TEXT(SDO_Service_Perform_Status__c),"High",1,"Medium",2,"Low",3,0)</formula><formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs><precision>18</precision><scale>0</scale><type>Number</type></CustomField>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Access to the Asset Criticality Management cards: criticality fields and the timeline and telematics Apex controllers</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>ACM User</label>
+    <classAccesses><apexClass>ACM_AssetTimelineController</apexClass><enabled>true</enabled></classAccesses>
+    <classAccesses><apexClass>ACM_TelematicsController</apexClass><enabled>true</enabled></classAccesses>
+    <flowAccesses><enabled>true</enabled><flow>ACM_Assess_Criticality</flow></flowAccesses>
+    <fieldPermissions><editable>true</editable><field>Asset.AIM_Category__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Asset.Service_Type__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Asset.Associated_Compliance__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Asset.AIM_Impact_Score__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Asset.Criticality_Review_Date__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Asset.Replacement_Cost__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Asset.Lifespan_Years__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Asset.AIM_Condition__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Asset.Criticality_Indicator__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Asset.Criticality_Score__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Asset.Criticality_Rating__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>false</editable><field>Asset.Data_Quality_Status__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Case.Location__c</field><readable>true</readable></fieldPermissions>
+</PermissionSet>

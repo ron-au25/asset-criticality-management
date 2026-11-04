@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Criticality_Rating__c</fullName><description>AIM §6.4.2</description><label>Criticality Rating</label><formula>IF(Criticality_Score__c = 0, "Not Assessed", IF(Criticality_Score__c &lt;= 2, "Non-Critical", IF(Criticality_Score__c &lt;= 5, "Semi-Critical", "Critical")))</formula><formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs><type>Text</type></CustomField>

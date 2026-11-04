@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Unit__c</fullName>
+    <label>Unit</label>
+    <description>Unit label shown in the work order description, for example kPa.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <length>255</length>
+    <type>Text</type>
+</CustomField>

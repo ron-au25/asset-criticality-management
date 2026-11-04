@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Threshold_Criteria_Name__c</fullName>
+    <label>Threshold Criteria Name</label>
+    <description>Name of the RecordsetFilterCriteria whose rule value is the threshold. Blank or not found: Default Threshold is used.</description>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <length>255</length>
+    <type>Text</type>
+</CustomField>

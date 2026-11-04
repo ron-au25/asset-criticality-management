@@ -1,0 +1,180 @@
+<template>
+    <lightning-card>
+        <div slot="title" class="title">
+            <lightning-icon icon-name="standard:asset_audit" size="small"></lightning-icon>
+            <span class="title_text">Asset Health</span>
+            <span class="title_sub">AIM criticality · compliance · lifecycle</span>
+        </div>
+        <template if:true={noAsset}>
+            <p class="slds-p-horizontal_medium slds-text-color_weak">This work order has no asset.</p>
+        </template>
+        <template if:true={error}>
+            <p class="slds-p-horizontal_medium slds-text-color_error">{error}</p>
+        </template>
+        <template if:false={loaded}>
+            <div class="slds-p-around_medium slds-is-relative">
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </div>
+        </template>
+        <template if:true={loaded}>
+            <div class="identity">
+                <lightning-icon icon-name="standard:asset_audit" size="small"></lightning-icon>
+                <div class="identity_main">
+                    <span class="eyebrow">Asset</span>
+                    <template if:true={isWorkOrder}>
+                        <a class="identity_name" href={assetUrl} data-id={assetId} onclick={handleAssetClick}>{assetName}</a>
+                    </template>
+                    <template if:false={isWorkOrder}>
+                        <span class="identity_name">{assetName}</span>
+                    </template>
+                </div>
+                <div class="identity_chips">
+                    <div class="identity_chip">
+                        <span class="field_label">Status</span>
+                        <span class={statusClass}>{statusLabel}</span>
+                    </div>
+                    <div class="identity_chip">
+                        <span class="field_label">Warranty</span>
+                        <span class={warrantyClass}>{warrantyLabel}</span>
+                        <span class="identity_sub">
+                            <template if:true={warrantyDate}>{warrantyDatePrefix}
+                                <lightning-formatted-date-time value={warrantyDate} year="numeric" month="short"
+                                    day="2-digit" time-zone="UTC"></lightning-formatted-date-time>
+                            </template>
+                            <template if:true={warrantyType}> · {warrantyType}</template>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="body">
+                <!-- criticality hero -->
+                <section class={heroClass}>
+                    <div class="ring" style={ringStyle}>
+                        <div class="ring_inner">
+                            <span class="ring_score">{scoreText}</span>
+                            <span class="ring_of">of 9</span>
+                        </div>
+                    </div>
+                    <div class="hero_text">
+                        <span class="eyebrow">Criticality</span>
+                        <span class="hero_rating">{ratingLabel}</span>
+                        <span class="hero_regime">{regimeTitle}</span>
+                        <span class="hero_detail">{regimeDetail}</span>
+                    </div>
+                </section>
+
+                <!-- matrix + impact -->
+                <section class="card">
+                    <div class="card_head">
+                        <span class="eyebrow">Impact × Condition</span>
+                        <span class="card_note">{impactLabel} impact · {conditionLabel}</span>
+                    </div>
+                    <div class="matrix">
+                        <div class="matrix_axis_y">Impact</div>
+                        <div class="matrix_grid">
+                            <template for:each={matrixRows} for:item="row">
+                                <div key={row.key} class="matrix_row">
+                                    <span class="matrix_label">{row.label}</span>
+                                    <template for:each={row.cells} for:item="cell">
+                                        <span key={cell.key} class={cell.cls}>{cell.score}</span>
+                                    </template>
+                                </div>
+                            </template>
+                            <div class="matrix_row matrix_footer">
+                                <span class="matrix_label"></span>
+                                <template for:each={matrixCols} for:item="col">
+                                    <span key={col.key} class="matrix_collabel">{col.label}</span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="impact">
+                        <div class="impact_head">
+                            <span class="field_label">Impact score (0–18)</span>
+                            <span class="impact_value">{impactScoreText}</span>
+                        </div>
+                        <div class="impact_track">
+                            <span class="zone zone_minor"></span>
+                            <span class="zone zone_mod"></span>
+                            <span class="zone zone_major"></span>
+                            <template if:true={hasImpactScore}>
+                                <span class="impact_marker" style={impactMarkerStyle}></span>
+                            </template>
+                        </div>
+                        <div class="impact_scale">
+                            <span>Minor 1–6</span><span>Moderate 7–13</span><span>Major 14–18</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- review + compliance -->
+                <section class="card">
+                    <div class="card_head">
+                        <span class="eyebrow">Review and governance</span>
+                    </div>
+                    <div class="rows">
+                        <div class="row">
+                            <span class="field_label">Criticality review</span>
+                            <span class="row_value">
+                                <template if:true={reviewDate}>
+                                    <lightning-formatted-date-time value={reviewDate} year="numeric"
+                                        month="short" day="2-digit" time-zone="UTC"></lightning-formatted-date-time>
+                                </template>
+                                <template if:false={reviewDate}>Never</template>
+                            </span>
+                        </div>
+                        <div class="row">
+                            <span class="field_label">24-month review</span>
+                            <span class={reviewClass}>{reviewDaysText}</span>
+                        </div>
+                        <div class="row">
+                            <span class="field_label">Compliance</span>
+                            <span class={complianceClass}>{complianceText}</span>
+                        </div>
+                        <div class="row">
+                            <span class="field_label">Data quality</span>
+                            <span class={dataQualityClass}>{dataQuality}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- lifecycle -->
+                <section class="card">
+                    <div class="card_head">
+                        <span class="eyebrow">Lifecycle and value</span>
+                    </div>
+                    <template if:true={hasLifecycle}>
+                        <div class="bar">
+                            <div class={lifeBarClass} style={lifeBarStyle}></div>
+                        </div>
+                        <p class="bar_text">{lifeText}</p>
+                    </template>
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="field_label">Expected lifespan</span>
+                            <span class="stat_value">{lifespanText}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="field_label">Replacement cost</span>
+                            <span class="stat_value">
+                                <template if:true={hasReplacementCost}>
+                                    <lightning-formatted-number value={replacementCost} format-style="currency"
+                                        currency-code={currencyCode} maximum-fraction-digits="0"></lightning-formatted-number>
+                                </template>
+                                <template if:false={hasReplacementCost}>–</template>
+                            </span>
+                        </div>
+                        <div class="stat">
+                            <span class="field_label">Asset category</span>
+                            <span class="stat_value">{category}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="field_label">Service type</span>
+                            <span class="stat_value">{serviceType}</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </template>
+    </lightning-card>
+</template>

@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata"><fullName>Location__c</fullName><description>Case has no LocationId; tenancy / space of the request</description><label>Location</label><deleteConstraint>SetNull</deleteConstraint><referenceTo>Location</referenceTo><relationshipLabel>ACM Cases</relationshipLabel><relationshipName>ACM_Cases</relationshipName><required>false</required><trackHistory>false</trackHistory><type>Lookup</type></CustomField>
