@@ -3,7 +3,7 @@
     <apiVersion>64.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>ACM Asset Work Order Timeline</masterLabel>
-    <description>Assets with their work orders on a timeline, filterable by centre, building and space.</description>
+    <description>Locations and assets as an expandable hierarchy with their work orders on a timeline. Loads lazily by location and time range; filter by centre or find assets and locations by text.</description>
     <targets>
         <target>lightning__HomePage</target>
         <target>lightning__AppPage</target>

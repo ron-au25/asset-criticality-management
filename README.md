@@ -10,7 +10,9 @@ Three Lightning cards for Salesforce Field Service that show how critical an ass
 
 **Asset Health** shows the criticality score and rating, the 3x3 impact-by-condition matrix, the review date, data quality, lifecycle and replacement cost, classification and warranty status.
 
-**Asset Work Order Timeline** plots an asset's work orders as job boxes on a timeline, grouped by location, with status colours and filters by location level.
+**Asset Work Order Timeline** plots work orders as job boxes on an expandable location and asset-hierarchy tree. It loads lazily (locations first, then a location's assets when opened, then work orders for the visible months, cached), so it copes with tens of thousands of assets. A collapsed parent asset shows its children's work orders; expanding it shows each child's own. Filter by centre or criticality (non-matching assets in a matching tree are dimmed), or find assets and locations by text and then "Show all assets here" on a location. Refresh re-reads everything on screen.
+
+Current version: **1.1.0**. See [CHANGELOG.md](CHANGELOG.md).
 
 **Assess Criticality** is an Asset quick action (screen flow) that scores impact across six categories plus condition, then saves the impact score, the condition and the review date. The card and the score update from it.
 
@@ -35,6 +37,7 @@ scripts/apex/acm_telematics_sample_data.apex
 scripts/apex/acm_mel_seed_locations.apex   example: builds a Site > Building > Level > Space hierarchy and links assets
 scripts/setup_telematics_sample.sh
 docs/INSTALL.md
+CHANGELOG.md
 ```
 
 ## Requirements
@@ -59,5 +62,5 @@ Then add the cards to the record pages by hand. Full steps, configuration and tr
 
 - Page layouts and Lightning pages are not part of the repo. Place the cards with Lightning App Builder.
 - The telematics card is a simulation: the connection status and "last synced" time are mocked, and no real telematics feed is read.
-- The timeline groups by the Location hierarchy (centre, `Building`, `Level`, `Space` / `Tenancy` / `Room`). Assets without a `LocationId` still show, ungrouped. See step 5b in [docs/INSTALL.md](docs/INSTALL.md) for a script that builds a hierarchy.
+- The timeline follows the Location hierarchy to any depth. Root assets (no parent asset) sit under their `LocationId`; child assets sit under their parent. Root assets without a location are under a "No location" row. See step 5b in [docs/INSTALL.md](docs/INSTALL.md) for a script that builds a hierarchy.
 - The timeline reads `Case.Location__c`, which this repo creates as a lookup to Location.

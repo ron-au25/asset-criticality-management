@@ -60,7 +60,7 @@ To use your own asset instead, create a monitor and an `AssetAttribute` for it, 
 
 ## 5b. Location hierarchy for your assets (optional)
 
-The timeline groups work orders by location: centre (no parent), then Building, Level, and Space / Tenancy / Room. Assets with no `LocationId` still appear, but without that grouping. To give them a hierarchy, use `scripts/apex/acm_mel_seed_locations.apex` as a template. As shipped it:
+The timeline shows the Location tree (any depth, top level = centres) and loads a location's assets when it is opened. Assets with no `LocationId` appear under a "No location" row. To give them a hierarchy, use `scripts/apex/acm_mel_seed_locations.apex` as a template. As shipped it:
 
 - selects assets named `MEL-SEED%` (the root machines are those with no parent asset)
 - creates `Melbourne Workshop` (Site) > `Main Workshop` (Building) > `Ground Level` (Level) > `Bay 1` to `Bay N` (Space), one bay per root asset in name order
@@ -75,7 +75,7 @@ sf apex run --target-org MY_ORG --file scripts/apex/acm_mel_seed_locations.apex
 Notes:
 
 - Safe to re-run: locations are matched by name and parent, and assets are only updated when their location differs. The debug line `ACM locations: roots=... newBays=... assets updated=...` shows what changed (`0` and `0` on a re-run).
-- Location types must be exactly `Building`, `Level` and `Space` (or `Tenancy` / `Room`), because the timeline matches on those strings. The `LocationType` picklist may not list them, but API inserts were accepted in the test org. If your org rejects them, add the values to the picklist.
+- The `LocationType` picklist may not list `Building`, `Level` or `Space`, but API inserts were accepted in the test org. If your org rejects them, add the values to the picklist. The timeline does not depend on these names.
 - In anonymous Apex, `Location` clashes with the system `Location` class, so the script uses `Schema.Location`.
 - Undo: `UPDATE Asset SET LocationId = NULL WHERE Name LIKE 'MEL-SEED%'`, then delete the `Melbourne Workshop` location tree.
 
@@ -117,6 +117,15 @@ The sample-data script reads the same record, so change it before running the sc
 3. On the Telematics card, press Simulate: the value moves above the threshold and a work order is created. Pressing it again does not create a second one.
 4. Press Reset to return the reading to normal. The alarm work order stays open and must be closed or deleted by hand.
 
+### Using the timeline
+
+- **Open a location** (chevron or row click) to load its root assets, 50 at a time. Open a root asset to load its whole tree.
+- **Prev / Next / Today** step the window. Work orders are cached per month, so going back is instant. **Refresh** re-reads everything on screen.
+- **Search** (2+ characters) finds assets by name, serial and other text fields, and locations by name. It opens the path to each match and highlights it. Under a location with matches, **Show all assets here** shows the full location. Clear the box to go back to the previous tree.
+- **Filters > Criticality** keeps an asset tree when any asset in it matches; the assets that do not match are dimmed.
+- **Filters > Centre** limits the tree and search to one top-level location.
+- Hover a row or bar for details; click an asset name or bar to open the record.
+
 ## Troubleshooting
 
 | Symptom | Cause and fix |
@@ -126,5 +135,10 @@ The sample-data script reads the same record, so change it before running the sc
 | Telematics card says the asset is not monitored | Run the sample-data script, or create a monitor and an `AssetAttribute` for the asset |
 | Simulate throws "Asset has no ... attribute" | The asset lacks an `AssetAttribute` for the configured attribute name |
 | Deploy reports 0 tests run | Run the tests directly with `sf apex run test` |
-| Timeline shows assets with no centre, building or space | Those assets have no `LocationId`. Create a hierarchy (step 5b) |
+| Timeline shows assets under "No location" | Those root assets have no `LocationId`. Create a hierarchy (step 5b) |
+| Timeline search finds nothing for a just-created asset | Search indexing can lag a few minutes |
+| Timeline notice "Too many work orders" | More than 5,000 in one month for the open locations; open fewer locations or search |
+| Timeline notice "Showing the first 25 of N matching asset hierarchies" | Add more words in the search box, or use "Show all assets here" on a location |
+| Timeline notice "Only the first 10000 locations are loaded" | Use the Centre filter or search to reach the rest |
+| Location chips show 0 although bars are visible | Chips count open work orders only; completed or cancelled ones do not count (Colour by Status to check) |
 | Location script: `Compilation failed ... Location` | Use `Schema.Location`, not `Location`, in anonymous Apex |

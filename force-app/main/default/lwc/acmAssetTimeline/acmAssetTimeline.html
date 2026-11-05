@@ -12,12 +12,15 @@
                     <span class="range">{rangeLabel}</span>
                 </div>
                 <div class="quick">
+                    <template if:true={showTreeControls}>
+                        <lightning-input class="searchbox" type="search" variant="label-hidden" label="Find assets or locations" placeholder="Find assets or locations…" value={searchText} onchange={handleSearch}></lightning-input>
+                    </template>
                     <lightning-combobox class="ctl" name="view" label="View" variant="label-hidden" value={view} options={viewOptions} onchange={handleView}></lightning-combobox>
                     <lightning-combobox class="ctl" name="colour" label="Colour by" variant="label-hidden" value={colourMode} options={colourOptions} onchange={handleColour}></lightning-combobox>
-                    <lightning-button-icon icon-name="utility:refresh" variant="border" alternative-text="Refresh" title="Refresh" disabled={isLoading} onclick={handleRefresh}></lightning-button-icon>
-                    <template if:true={showGrouping}>
+                    <lightning-button-icon icon-name="utility:refresh" variant="border" alternative-text="Refresh" title="Refresh" onclick={handleRefresh}></lightning-button-icon>
+                    <template if:true={showTreeControls}>
                         <div class="nav-btns">
-                            <lightning-button-icon icon-name="utility:expand_all" variant="border" alternative-text="Expand all" title="Expand all" onclick={handleExpandAll}></lightning-button-icon>
+                            <lightning-button-icon icon-name="utility:expand_all" variant="border" alternative-text="Expand all locations" title="Expand all locations" onclick={handleExpandAll}></lightning-button-icon>
                             <lightning-button-icon icon-name="utility:collapse_all" variant="border" alternative-text="Collapse all" title="Collapse all" onclick={handleCollapseAll}></lightning-button-icon>
                         </div>
                     </template>
@@ -27,22 +30,23 @@
                     </button>
                 </div>
             </div>
+            <div class={progressClass}></div>
 
             <template if:true={filtersOpen}>
                 <div class="filters">
                     <lightning-input type="date" label="Start date" value={startDate} onchange={handleStart}></lightning-input>
                     <lightning-combobox label="Criticality" value={critFilter} options={critOptions} onchange={handleCrit}></lightning-combobox>
-                    <template if:true={showFilters}>
+                    <template if:true={showCentre}>
                         <lightning-combobox label="Centre" value={centreId} options={centreOptions} onchange={handleCentre}></lightning-combobox>
-                        <lightning-combobox label="Building" value={buildingId} options={buildingOptions} onchange={handleBuilding}></lightning-combobox>
-                        <lightning-combobox label="Level" value={levelId} options={levelOptions} onchange={handleLevel}></lightning-combobox>
-                        <lightning-combobox label="Space" value={roomId} options={roomOptions} onchange={handleRoom}></lightning-combobox>
                     </template>
                 </div>
             </template>
 
             <template if:true={error}>
                 <div class="slds-text-color_error">{error}</div>
+            </template>
+            <template if:true={notice}>
+                <div class="notice">{notice}</div>
             </template>
             <template if:true={isLoading}>
                 <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
@@ -55,7 +59,7 @@
                     </template>
                 </div>
                 <div class="grid" style={gridStyle}>
-                    <div class="label-col head">Asset / location<div class="resizer" title="Drag to resize" onmousedown={handleResizeStart}></div></div>
+                    <div class="label-col head">Location / asset<div class="resizer" title="Drag to resize" onmousedown={handleResizeStart}></div></div>
                     <div class="track head">
                         <div class="tier tier-top">
                             <template for:each={topTicks} for:item="t">
@@ -70,40 +74,49 @@
                     </div>
                     <template for:each={displayRows} for:item="row">
                         <div key={row.key} class="row">
-                            <template if:true={row.isGroup}>
-                                <div class={row.className} data-key={row.key} onclick={handleToggle}>
-                                    <lightning-icon icon-name={row.icon} size="xx-small"></lightning-icon>
-                                    <span class="group-label">{row.label}</span>
-                                    <span class="kpis">
-                                        <template for:each={row.chips} for:item="k">
-                                            <span key={k.key} class={k.className} title={k.title}>{k.label}</span>
-                                        </template>
-                                    </span>
-                                </div>
-                            </template>
-                            <template if:false={row.isGroup}>
-                                <div class={row.labelClass} data-id={row.assetId} onmouseenter={handleAssetEnter} onmouseleave={handleAssetLeave}>
-                                    <span class={row.critClass}>{row.critAbbr}</span>
-                                    <a href={row.href} class="asset-name" data-id={row.assetId} data-object={row.objectApiName} onclick={handleRecordClick}>{row.assetName}</a>
-                                    <template if:true={row.accountName}><span class="acct" title="Account">{row.accountName}</span></template>
-                                </div>
-                                <div class="track">
-                                    <template for:each={bottomTicks} for:item="t">
-                                        <div key={t.key} class="gridline" style={t.style}></div>
+                            <div class={row.labelClass} style={row.labelStyle} title={row.title} data-key={row.key} onmouseenter={handleLabelEnter} onmouseleave={handleLeave} onclick={handleLabelClick}>
+                                <template if:true={row.isNode}>
+                                    <template if:true={row.hasKids}>
+                                        <button type="button" class="chev" data-key={row.key} aria-label="Expand or collapse" onclick={handleChevron}>
+                                            <lightning-icon icon-name={row.icon} size="xx-small"></lightning-icon>
+                                        </button>
                                     </template>
-                                    <div class="today" style={todayStyle}></div>
-                                    <template for:each={row.bars} for:item="b">
-                                        <div key={b.key} class={b.className} style={b.style} data-id={b.id} onclick={handleBarClick} onmouseenter={handleBarEnter} onmouseleave={handleAssetLeave}></div>
+                                    <template if:false={row.hasKids}><span class="chev-pad"></span></template>
+                                    <template if:true={row.isLoc}>
+                                        <span class="group-label">{row.name}</span>
+                                        <span class="kpis">
+                                            <template for:each={row.chips} for:item="k">
+                                                <span key={k.key} class={k.className} title={k.title}>{k.label}</span>
+                                            </template>
+                                        </span>
                                     </template>
-                                </div>
-                            </template>
+                                    <template if:true={row.isAsset}>
+                                        <span class={row.critClass}>{row.critAbbr}</span>
+                                        <a href={row.href} class="asset-name" data-id={row.assetId} onclick={handleRecordClick}>{row.name}</a>
+                                    </template>
+                                </template>
+                                <template if:true={row.isMore}>
+                                    <button type="button" class="linkbtn" data-loc={row.locKey} onclick={handleMore}>{row.label}</button>
+                                </template>
+                                <template if:true={row.isShowAll}>
+                                    <button type="button" class="linkbtn" data-loc={row.locKey} onclick={handleShowAll}>{row.label}</button>
+                                </template>
+                                <template if:true={row.isNote}><span class="note-text">{row.label}</span></template>
+                            </div>
+                            <div class={row.trackClass}>
+                                <div class="gridbg" style={gridBgStyle}></div>
+                                <div class="today" style={todayStyle}></div>
+                                <template for:each={row.bars} for:item="b">
+                                    <div key={b.key} class={b.className} style={b.style} data-id={b.id} data-row={b.rowKey} onclick={handleBarClick} onmouseenter={handleBarEnter} onmouseleave={handleLeave}></div>
+                                </template>
+                            </div>
                         </div>
                     </template>
                 </div>
             </template>
             <template if:false={hasRows}>
                 <template if:false={isLoading}>
-                    <div class="slds-text-color_weak slds-p-vertical_small">No assets or work orders for this selection.</div>
+                    <div class="slds-text-color_weak slds-p-vertical_small">{emptyText}</div>
                 </template>
             </template>
 
