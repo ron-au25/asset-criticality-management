@@ -222,3 +222,6 @@
 .identity_chips { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; }
 .identity_chip { display: flex; flex-direction: column; align-items: flex-start; gap: 0.125rem; }
 .identity_sub { font-size: 0.6875rem; color: var(--ink-soft); }
+
+.standard_link { font-size: 0.75rem; font-weight: 600; text-decoration: none; }
+.standard_link:hover { text-decoration: underline; }

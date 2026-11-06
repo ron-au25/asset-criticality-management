@@ -2,6 +2,16 @@
 
 Versions follow [semantic versioning](https://semver.org/). Each release is tagged in git (`vX.Y.Z`).
 
+## Unreleased
+
+### Added
+- AIM Standard knowledge article, built from one content model (`scripts/build_aim_article.py`) into `docs/knowledge/` as a Salesforce-branded HTML page, a PDF and a Knowledge body.
+- `scripts/setup_aim_article.sh` creates the article as a draft `Knowledge__kav` in a target org (idempotent). See step 5d in docs/INSTALL.md.
+- Asset Health card: "AIM Standard" link in the Review and governance section. The article is found by URL name at runtime through `ACM_KnowledgeLinkController`, so no Id is needed per org. Card property: AIM Standard article URL name.
+
+### Changed
+- The Asset Health `knowledgeArticleId` property is deprecated and ignored (kept only because pages that use the card already store it).
+
 ## 1.1.0 (2026-11-05)
 
 Asset Work Order Timeline rebuilt for large orgs and asset hierarchies.

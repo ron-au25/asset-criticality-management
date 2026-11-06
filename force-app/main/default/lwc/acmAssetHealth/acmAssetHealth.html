@@ -111,6 +111,9 @@
                 <section class="card">
                     <div class="card_head">
                         <span class="eyebrow">Review and governance</span>
+                        <template if:true={hasStandardLink}>
+                            <a class="standard_link" href={standardUrl} onclick={handleStandardClick}>AIM Standard</a>
+                        </template>
                     </div>
                     <div class="rows">
                         <div class="row">

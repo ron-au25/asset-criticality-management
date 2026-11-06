@@ -9,6 +9,11 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__RecordPage">
+            <property name="knowledgeUrlName" type="String" label="AIM Standard article URL name"
+                description="URL name of the AIM Standard knowledge article. Leave blank to hide the link."
+                default="aim-standard-overview"/>
+            <property name="knowledgeArticleId" type="String" label="AIM Standard article Id (deprecated, ignored)"
+                description="No longer used. The article is found by URL name instead."/>
             <objects>
                 <object>Asset</object>
                 <object>WorkOrder</object>

@@ -23,7 +23,7 @@ Current version: **1.1.0**. See [CHANGELOG.md](CHANGELOG.md).
 ```
 force-app/main/default/
   lwc/                 acmAssetHealth, acmAssetTimeline, acmTelematicsSimulation
-  classes/             ACM_AssetTimelineController, ACM_TelematicsController, and their tests
+  classes/             ACM_AssetTimelineController, ACM_TelematicsController, ACM_KnowledgeLinkController, and their tests
   objects/Asset/fields 12 criticality fields (AIM_*, Criticality_*, Lifespan_Years__c, ...)
   objects/Case/fields  Location__c
   objects/ACM_Simulation_Config__mdt   settings for the telematics card
@@ -37,6 +37,9 @@ scripts/apex/acm_telematics_sample_data.apex
 scripts/apex/acm_mel_seed_locations.apex   example: builds a Site > Building > Level > Space hierarchy and links assets
 scripts/apex/acm_mel_seed_lifecycle.apex   example: sets lifespan, category, service type and replacement cost on MEL-SEED assets
 scripts/setup_telematics_sample.sh
+scripts/setup_aim_article.sh               creates the AIM Standard knowledge article (draft) that the Asset Health card links to
+scripts/build_aim_article.py               builds docs/knowledge/ (HTML article, body, JSON) from one content model
+docs/knowledge/                            AIM Standard article: standalone HTML and PDF, plus the Knowledge body
 docs/INSTALL.md
 CHANGELOG.md
 ```

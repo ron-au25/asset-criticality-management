@@ -2,6 +2,7 @@ import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { getRecord } from 'lightning/uiRecordApi';
 import { getRelatedListRecords } from 'lightning/uiRelatedListApi';
+import getArticleId from '@salesforce/apex/ACM_KnowledgeLinkController.getArticleId';
 
 const FIELDS = [
     'Asset.Name',
@@ -144,17 +145,55 @@ export default class AcmAssetHealth extends NavigationMixin(LightningElement) {
     }
 
     assetUrl;
+    standardUrl;
 
-    /** Resolve the platform URL for the asset so the href is also navigation-aware (middle click, copy link). */
-    renderedCallback() {
-        if (!this.assetId || this._urlFor === this.assetId) return;
-        this._urlFor = this.assetId;
-        this[NavigationMixin.GenerateUrl]({
+    /** URL name of the AIM Standard knowledge article. Set it in App Builder; blank hides the link. */
+    @api knowledgeUrlName = 'aim-standard-overview';
+    resolvedArticleId;
+
+    /** Deprecated and ignored: kept only because published pages already store it and a property cannot be removed. */
+    @api knowledgeArticleId;
+
+    @wire(getArticleId, { urlName: '$knowledgeUrlName' })
+    wiredArticle({ data }) {
+        this.resolvedArticleId = data || undefined;
+    }
+
+    get hasStandardLink() {
+        return !!this.resolvedArticleId;
+    }
+
+    get standardRef() {
+        return {
             type: 'standard__recordPage',
-            attributes: { recordId: this.assetId, objectApiName: 'Asset', actionName: 'view' }
-        }).then((url) => {
-            this.assetUrl = url;
-        });
+            attributes: { recordId: this.resolvedArticleId, objectApiName: 'Knowledge__kav', actionName: 'view' }
+        };
+    }
+
+    /** Resolve the platform URLs so the hrefs are also navigation-aware (middle click, copy link). */
+    renderedCallback() {
+        if (this.assetId && this._urlFor !== this.assetId) {
+            this._urlFor = this.assetId;
+            this[NavigationMixin.GenerateUrl]({
+                type: 'standard__recordPage',
+                attributes: { recordId: this.assetId, objectApiName: 'Asset', actionName: 'view' }
+            }).then((url) => {
+                this.assetUrl = url;
+            });
+        }
+        if (this.resolvedArticleId && this._stdFor !== this.resolvedArticleId) {
+            this._stdFor = this.resolvedArticleId;
+            this[NavigationMixin.GenerateUrl](this.standardRef).then((url) => {
+                this.standardUrl = url;
+            });
+        }
+    }
+
+    /** Open the AIM Standard knowledge article (SPA navigation). */
+    handleStandardClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this[NavigationMixin.Navigate](this.standardRef);
     }
 
     /** Open the asset in the console / SPA navigation (no full page load). */

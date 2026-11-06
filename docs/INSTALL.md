@@ -22,20 +22,20 @@ sf org login web --alias MY_ORG
 
 ```bash
 sf project deploy start --target-org MY_ORG --manifest manifest/package.xml \
-  --test-level RunSpecifiedTests --tests ACM_AssetTimelineControllerTest --tests ACM_TelematicsControllerTest
+  --test-level RunSpecifiedTests --tests ACM_AssetTimelineControllerTest --tests ACM_TelematicsControllerTest --tests ACM_KnowledgeLinkControllerTest
 ```
 
 Sandboxes and scratch orgs can omit the test flags. Production-type orgs need a test level. To check first without changing the org:
 
 ```bash
 sf project deploy validate --target-org MY_ORG --manifest manifest/package.xml \
-  --test-level RunSpecifiedTests --tests ACM_AssetTimelineControllerTest --tests ACM_TelematicsControllerTest
+  --test-level RunSpecifiedTests --tests ACM_AssetTimelineControllerTest --tests ACM_TelematicsControllerTest --tests ACM_KnowledgeLinkControllerTest
 ```
 
 Some orgs report 0 tests run on deploy. If that happens, run them directly:
 
 ```bash
-sf apex run test --target-org MY_ORG --class-names ACM_AssetTimelineControllerTest --class-names ACM_TelematicsControllerTest --wait 15
+sf apex run test --target-org MY_ORG --class-names ACM_AssetTimelineControllerTest --class-names ACM_TelematicsControllerTest --class-names ACM_KnowledgeLinkControllerTest --wait 15
 ```
 
 ## 4. Assign the permission set (required)
@@ -86,6 +86,20 @@ Notes:
 ```bash
 sf apex run --target-org MY_ORG --file scripts/apex/acm_mel_seed_lifecycle.apex
 ```
+
+## 5d. AIM Standard knowledge article (optional)
+
+The Asset Health card shows an **AIM Standard** link when a knowledge article with URL name `aim-standard-overview` exists. The card finds it by URL name, so no Id is copied anywhere and the link works in any org. To create the article from `docs/knowledge/`:
+
+```bash
+scripts/setup_aim_article.sh MY_ORG
+```
+
+- It rebuilds the article from `scripts/build_aim_article.py`, then creates a **draft** `Knowledge__kav` (FAQ record type when present; question and answer in `FAQ_Question__c` / `FAQ_Answer__c`).
+- Publish the draft so every user sees the link (the card also falls back to the draft, which only its author can open).
+- Safe to re-run: if the URL name already exists nothing changes. It stops with a message if Knowledge or those FAQ fields are missing; without the article the card simply shows no link.
+- To point the card at a different article, set **AIM Standard article URL name** on the card in App Builder (blank hides the link).
+- A standalone copy is in `docs/knowledge/aim-standard-article.html` and `.pdf`.
 
 ## 6. Place the cards
 
