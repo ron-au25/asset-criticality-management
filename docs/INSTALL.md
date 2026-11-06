@@ -79,6 +79,14 @@ Notes:
 - In anonymous Apex, `Location` clashes with the system `Location` class, so the script uses `Schema.Location`.
 - Undo: `UPDATE Asset SET LocationId = NULL WHERE Name LIKE 'MEL-SEED%'`, then delete the `Melbourne Workshop` location tree.
 
+### 5c. Lifecycle and value fields for the seed assets (optional)
+
+`scripts/apex/acm_mel_seed_lifecycle.apex` fills `Lifespan_Years__c`, `AIM_Category__c`, `Service_Type__c` and `Replacement_Cost__c` on the `MEL-SEED%` assets. Machines and systems get Category 1, components Category 2 and Sensor Arrays Category 2N (AIM Standard section 5). Lifespans and AUD replacement costs are indicative demo values, set in the tables at the top of the script. Safe to re-run: only rows that differ are updated. The debug line `ACM lifecycle: assets=... updated=... skipped=...` shows what changed.
+
+```bash
+sf apex run --target-org MY_ORG --file scripts/apex/acm_mel_seed_lifecycle.apex
+```
+
 ## 6. Place the cards
 
 In Lightning App Builder:

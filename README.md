@@ -35,6 +35,7 @@ force-app/main/default/
 manifest/package.xml
 scripts/apex/acm_telematics_sample_data.apex
 scripts/apex/acm_mel_seed_locations.apex   example: builds a Site > Building > Level > Space hierarchy and links assets
+scripts/apex/acm_mel_seed_lifecycle.apex   example: sets lifespan, category, service type and replacement cost on MEL-SEED assets
 scripts/setup_telematics_sample.sh
 docs/INSTALL.md
 CHANGELOG.md
