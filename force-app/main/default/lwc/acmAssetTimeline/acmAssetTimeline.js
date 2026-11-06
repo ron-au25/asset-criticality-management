@@ -9,6 +9,7 @@ import searchAssets from '@salesforce/apex/ACM_AssetTimelineController.searchAss
 
 const DAY = 86400000;
 const NONE = 'none'; // pseudo-location holding root assets that have no location
+const NO_TYPE = '(none)'; // filter value for locations whose Location Type is blank
 const MAX_BATCH = 1000; // root ids per work order call
 const MAX_SEARCH_ROOTS = 25; // asset trees loaded for one search
 const MAX_SEARCH_LOCS = 10; // matched locations whose assets are loaded for one search
@@ -32,7 +33,7 @@ const LEGENDS = {
     priority: [['Critical', 'critical'], ['High', 'high'], ['Medium', 'medium'], ['Low', 'low']],
     criticality: [['Critical', 'critical'], ['Semi-Critical', 'semicritical'], ['Non-Critical', 'noncritical'], ['Not Assessed', 'notassessed']],
     status: [['Unscheduled', 'unscheduled'], ['Scheduled', 'scheduled'], ['In Progress', 'inprogress'], ['Completed', 'completed'], ['Cancelled', 'cancelled']],
-    worktype: [['Reactive', 'reactive'], ['PPM', 'ppm'], ['Other', 'other']]
+    worktype: [['Repair', 'repair'], ['Inspection / monitoring', 'inspection'], ['Planned maintenance', 'maintenance'], ['Project', 'project'], ['Other', 'other']]
 };
 const CRIT_FILTERS = [
     { label: 'All criticalities', value: '' },
@@ -102,7 +103,9 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
     startDate = isoOf(mondayOf(new Date()));
     colourMode = 'priority';
     critFilter = '';
-    centreId = '';
+    centreIds = []; // Location filter: top-level locations to show (empty = all)
+    selectedTypes = []; // Location types to show (empty = every type)
+    openDd = ''; // which multi-select dropdown is open: 'types' | 'centre' | ''
     searchText = '';
     searchState = null;
     searching = false;
@@ -156,9 +159,16 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
     connectedCallback() {
         if (this.isAssetPage) this.initAssetPage();
         this.loadLocations(true);
+        // close an open filter dropdown on a click anywhere outside it
+        this.outsideClick = () => {
+            if (!this.insideDd) this.openDd = '';
+            this.insideDd = false;
+        };
+        window.addEventListener('click', this.outsideClick);
     }
 
     disconnectedCallback() {
+        window.removeEventListener('click', this.outsideClick);
         clearTimeout(this.d.timer);
         clearTimeout(this.d.searchTimer);
     }
@@ -210,7 +220,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
                 const res = JSON.parse(json);
                 d.locs = res.locations;
                 d.locsTruncated = res.truncated;
-                if (res.truncated) this.notice = 'Only the first ' + res.locations.length + ' locations are loaded. Use the Centre filter or search to reach the rest.';
+                if (res.truncated) this.notice = 'Only the first ' + res.locations.length + ' locations are loaded. Use the Location filter or search to reach the rest.';
                 d.locById = new Map(d.locs.map((l) => [l.id, l]));
                 d.kids = new Map();
                 d.locs.forEach((l) => {
@@ -237,7 +247,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
 
     topLocations() {
         if (this.isLocationPage) return [this.recordId];
-        if (this.centreId) return [this.centreId];
+        if (this.centreIds.length) return [...this.centreIds];
         return this.d.locs.filter((l) => this.isTopLoc(l)).map((l) => l.id);
     }
 
@@ -414,16 +424,125 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
         this.critFilter = e.detail.value;
     }
 
-    handleCentre(e) {
-        this.centreId = e.detail.value;
-        if (this.centreId) this.openLocation('l:' + this.centreId);
+    handleCentreToggle(e) {
+        const value = e.target.dataset.value;
+        const sel = new Set(this.centreIds);
+        if (e.target.checked) {
+            sel.add(value);
+            this.openLocation('l:' + value);
+        } else {
+            sel.delete(value);
+        }
+        this.centreIds = [...sel];
+        this.centreChanged();
+    }
+
+    handleCentreClear() {
+        this.centreIds = [];
+        this.centreChanged();
+    }
+
+    centreChanged() {
         if (this.searchText.trim().length >= 2) this.runSearch(this.searchText);
         this.bump();
         this.scheduleData();
     }
 
-    get centreOptions() {
-        return [{ label: 'All centres', value: '' }, ...this.d.locs.filter((l) => this.isTopLoc(l)).map((l) => ({ label: l.name, value: l.id }))];
+    get centreItems() {
+        return this.d.locs.filter((l) => this.isTopLoc(l)).map((l) => ({ label: l.name, value: l.id, checked: this.centreIds.includes(l.id) }));
+    }
+
+    get centreSummary() {
+        if (!this.centreIds.length) return 'All locations';
+        const names = this.centreItems.filter((o) => o.checked).map((o) => o.label);
+        return names.length <= 2 ? names.join(', ') : names.length + ' locations';
+    }
+
+    get hasCentreSelection() {
+        return this.centreIds.length > 0;
+    }
+
+    get centreDropdownClass() {
+        return 'slds-dropdown-trigger slds-dropdown-trigger_click dd' + (this.openDd === 'centre' ? ' slds-is-open' : '');
+    }
+
+    get centreExpanded() {
+        return this.openDd === 'centre';
+    }
+
+    get typesExpanded() {
+        return this.openDd === 'types';
+    }
+
+    handleCentreMenu() {
+        this.openDd = this.openDd === 'centre' ? '' : 'centre';
+    }
+
+    get showTypeFilter() {
+        return !this.isAssetPage;
+    }
+
+    /** One checkbox per Location type present in the org. */
+    get typeOptions() {
+        const types = new Set(this.d.locs.map((l) => l.type || NO_TYPE));
+        return [...types].sort().map((t) => ({ label: t === NO_TYPE ? 'No type' : t, value: t }));
+    }
+
+    get typeItems() {
+        return this.typeOptions.map((o) => ({ ...o, checked: this.selectedTypes.includes(o.value) }));
+    }
+
+    get typeSummary() {
+        if (!this.selectedTypes.length) return 'All types';
+        const names = this.typeItems.filter((o) => o.checked).map((o) => o.label);
+        return names.length <= 2 ? names.join(', ') : names.length + ' types';
+    }
+
+    get typeDropdownClass() {
+        return 'slds-dropdown-trigger slds-dropdown-trigger_click dd' + (this.openDd === 'types' ? ' slds-is-open' : '');
+    }
+
+    handleTypesToggle() {
+        this.openDd = this.openDd === 'types' ? '' : 'types';
+    }
+
+    handleDdInside() {
+        this.insideDd = true; // lets the window click handler tell inside clicks from outside ones
+    }
+
+    get hasTypeSelection() {
+        return this.selectedTypes.length > 0;
+    }
+
+    handleTypesClear() {
+        this.selectedTypes = [];
+        this.typesChanged();
+    }
+
+    handleTypeToggle(e) {
+        const sel = new Set(this.selectedTypes);
+        if (e.target.checked) sel.add(e.target.dataset.value);
+        else sel.delete(e.target.dataset.value);
+        this.selectedTypes = [...sel];
+        this.typesChanged();
+    }
+
+    typesChanged() {
+        this.bump();
+        this.scheduleData();
+    }
+
+    /**
+     * With types selected, locations of any other type are left out: their row and own assets are hidden,
+     * but their child locations still show (so picking only Plant does not hide everything under a Site).
+     * The open Location page itself is never hidden.
+     */
+    isHiddenLoc(l) {
+        return !!l && this.selectedTypes.length > 0 && !this.selectedTypes.includes(l.type || NO_TYPE) && !(this.isLocationPage && l.id === this.recordId);
+    }
+
+    handleTypesKey(e) {
+        if (e.key === 'Escape') this.openDd = '';
     }
 
     shift(dir) {
@@ -455,7 +574,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
     }
 
     get activeFilterCount() {
-        return [this.critFilter, this.centreId].filter((v) => v).length;
+        return [this.critFilter, this.centreIds.length, this.selectedTypes.length].filter((v) => v).length;
     }
 
     get filterLabel() {
@@ -557,7 +676,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
             out.add(id);
             (d.kids.get(id) || []).forEach(walk);
         };
-        if (this.isLocationPage || this.centreId) this.topLocations().forEach(walk);
+        if (this.isLocationPage || this.centreIds.length) this.topLocations().forEach(walk);
         else d.locs.forEach((l) => out.add(l.id));
         return out;
     }
@@ -577,7 +696,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
         const lower = term.toLowerCase();
         const scope = this.scopeLocations();
         const locHits = d.locs.filter((l) => scope.has(l.id) && l.name.toLowerCase().includes(lower));
-        searchAssets({ term, centreId: this.isLocationPage ? this.recordId : this.centreId || null })
+        searchAssets({ term, locationIds: this.isLocationPage ? this.recordId : this.centreIds.join(',') || null })
             .then((json) => {
                 if (seq !== d.searchSeq) return null;
                 const hits = JSON.parse(json);
@@ -955,7 +1074,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
         if (this.searchState) this.searchState.rootsByLoc.forEach((ids) => ids.forEach((id) => listed.add(id)));
         listed.forEach((aid) => {
             const a = d.assetsById.get(aid);
-            if (!a || a.parentId || !a.locationId) return;
+            if (!a || a.parentId || !a.locationId || this.isHiddenLoc(d.locById.get(a.locationId))) return;
             const open = (d.woByRoot.get(aid) || []).filter(isOpen);
             const overdue = open.filter((w) => (w.winEndMs || w.endMs) < now).length;
             addUp(a.locationId, (c) => {
@@ -966,6 +1085,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
             });
         });
         d.woByLoc.forEach((list, locId) => {
+            if (this.isHiddenLoc(d.locById.get(locId))) return;
             const open = list.filter(isOpen);
             addUp(locId, (c) => {
                 c.openWo += open.length;
@@ -988,7 +1108,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
     model() {
         const d = this.d;
         const s = this.searchState;
-        const key = [this.rev, this.startDate, this.view, this.colourMode, this.critFilter, this.centreId, s ? s.id : 0].join('|');
+        const key = [this.rev, this.startDate, this.view, this.colourMode, this.critFilter, this.centreIds.join(','), this.selectedTypes.join(','), s ? s.id : 0].join('|');
         if (d.cache && d.cache.key === key) return d.cache;
         const r = this.range;
         const now = Date.now();
@@ -1112,6 +1232,10 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
             const matched = s && s.locMatch.has(id);
             const all = !s || inMatch || matched || s.showAll.has(id);
             if (!all && !s.pathLocs.has(id)) return;
+            if (this.isHiddenLoc(l)) {
+                (d.kids.get(id) || []).forEach((c) => walkLoc(c, depth, all));
+                return;
+            }
             const k = 'l:' + id;
             const expanded = d.expanded.has(k);
             locs.push(id);
@@ -1125,7 +1249,7 @@ export default class AcmAssetTimeline extends NavigationMixin(LightningElement) 
             if (this.rootAssetId) walkAsset(this.rootAssetId, 0, true);
         } else {
             this.topLocations().forEach((id) => walkLoc(id, 0, false));
-            if (!this.centreId && !this.isLocationPage && (!s || s.pathLocs.has(NONE))) {
+            if (!this.centreIds.length && !this.isLocationPage && (!s || s.pathLocs.has(NONE))) {
                 const k = 'l:' + NONE;
                 const expanded = d.expanded.has(k);
                 const allNone = !s || s.showAll.has(NONE);

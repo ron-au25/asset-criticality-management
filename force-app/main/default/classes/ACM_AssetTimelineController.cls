@@ -144,21 +144,28 @@ public with sharing class ACM_AssetTimelineController {
 
     /**
      * Asset search (name, serial and other text fields). Each hit comes back with its parent, root asset and the
-     * root's location, so the client can load and expand the path to it. centreId limits hits to that location subtree;
-     * because that filter runs after the search, more rows are scanned so hits elsewhere do not crowd out the centre's.
+     * root's location, so the client can load and expand the path to it. locationIds (comma separated) limits hits to
+     * those location subtrees; because that filter runs after the search, more rows are scanned so hits elsewhere do
+     * not crowd out the selected locations'.
      */
     @AuraEnabled
-    public static String searchAssets(String term, String centreId) {
+    public static String searchAssets(String term, String locationIds) {
         String clean = term == null ? '' : term.replaceAll('[^\\p{L}\\p{N} _.@/#-]', ' ').trim();
         if (clean.length() < 2) return '[]';
         String pattern = clean + '*';
-        Integer scan = String.isNotBlank(centreId) ? MAX_SEARCH_SCAN : MAX_SEARCH;
+        Integer scan = String.isNotBlank(locationIds) ? MAX_SEARCH_SCAN : MAX_SEARCH;
         List<List<SObject>> found = [FIND :pattern IN ALL FIELDS RETURNING Asset(Id, Name, SerialNumber, ParentId, RootAssetId LIMIT :scan)];
         List<Asset> hits = (List<Asset>) found[0];
         Set<Id> rootIds = new Set<Id>();
         for (Asset a : hits) rootIds.add(a.RootAssetId != null ? a.RootAssetId : a.Id);
         Map<Id, Asset> roots = new Map<Id, Asset>([SELECT Id, LocationId FROM Asset WHERE Id IN :rootIds]);
-        Set<Id> allowed = String.isNotBlank(centreId) ? descendants(centreId) : null;
+        Set<Id> allowed = null;
+        if (String.isNotBlank(locationIds)) {
+            allowed = new Set<Id>();
+            for (String raw : locationIds.split(',')) {
+                if (String.isNotBlank(raw)) allowed.addAll(descendants((Id) raw.trim()));
+            }
+        }
         List<Map<String, Object>> out = new List<Map<String, Object>>();
         for (Asset a : hits) {
             Id rootId = a.RootAssetId != null ? a.RootAssetId : a.Id;
@@ -332,11 +339,23 @@ public with sharing class ACM_AssetTimelineController {
         }
     }
 
+    // First match wins, so 'Corrective Maintenance' is repair and not maintenance. Keywords are matched on the work type
+    // name (no WorkType field holds a category); 'pm'/'ppm'/'qa' only match as whole words.
+    private static final Pattern WT_REPAIR = Pattern.compile(
+        'repair|break-?fix|emergency|corrective|rebuild|replacement|part swap|reclamation|grinding|depot');
+    private static final Pattern WT_INSPECTION = Pattern.compile(
+        'inspect|condition|telemetry|survey|measure|watchlist|testing|quality|investigation|estimate|\\bqa\\b');
+    private static final Pattern WT_PROJECT = Pattern.compile('install|upgrade|renewal');
+    private static final Pattern WT_MAINTENANCE = Pattern.compile('maintenance|service|\\bp?pm\\d*\\b');
+
     @TestVisible
     private static String workTypeGroup(String name) {
         if (name == null) return 'other';
-        if (name.startsWith('Reactive')) return 'reactive';
-        if (name.startsWith('PPM')) return 'ppm';
+        String n = name.toLowerCase();
+        if (WT_REPAIR.matcher(n).find()) return 'repair';
+        if (WT_INSPECTION.matcher(n).find()) return 'inspection';
+        if (WT_PROJECT.matcher(n).find()) return 'project';
+        if (WT_MAINTENANCE.matcher(n).find()) return 'maintenance';
         return 'other';
     }
 }

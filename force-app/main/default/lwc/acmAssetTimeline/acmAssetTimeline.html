@@ -37,7 +37,54 @@
                     <lightning-input type="date" label="Start date" value={startDate} onchange={handleStart}></lightning-input>
                     <lightning-combobox label="Criticality" value={critFilter} options={critOptions} onchange={handleCrit}></lightning-combobox>
                     <template if:true={showCentre}>
-                        <lightning-combobox label="Centre" value={centreId} options={centreOptions} onchange={handleCentre}></lightning-combobox>
+                        <div class="slds-form-element" onclick={handleDdInside} onkeydown={handleTypesKey}>
+                            <label class="slds-form-element__label" for="centre-btn">Location</label>
+                            <div class="slds-form-element__control">
+                                <div class={centreDropdownClass}>
+                                    <button id="centre-btn" type="button" class="dd-btn" aria-haspopup="true" aria-expanded={centreExpanded} onclick={handleCentreMenu}>
+                                        <span class="dd-btn-text">{centreSummary}</span>
+                                        <lightning-icon icon-name="utility:down" size="xx-small"></lightning-icon>
+                                    </button>
+                                    <div class="slds-dropdown slds-dropdown_left slds-dropdown_fluid dd-panel">
+                                        <template if:true={hasCentreSelection}>
+                                            <button type="button" class="dd-clear" onclick={handleCentreClear}>Clear all</button>
+                                        </template>
+                                        <ul class="slds-dropdown__list" role="menu">
+                                            <template for:each={centreItems} for:item="o">
+                                                <li key={o.value} class="slds-dropdown__item dd-item" role="presentation">
+                                                    <lightning-input type="checkbox" label={o.label} data-value={o.value} checked={o.checked} onchange={handleCentreToggle}></lightning-input>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <template if:true={showTypeFilter}>
+                        <div class="slds-form-element" onclick={handleDdInside} onkeydown={handleTypesKey}>
+                            <label class="slds-form-element__label" for="type-btn">Location types</label>
+                            <div class="slds-form-element__control">
+                                <div class={typeDropdownClass}>
+                                    <button id="type-btn" type="button" class="dd-btn" aria-haspopup="true" aria-expanded={typesExpanded} onclick={handleTypesToggle}>
+                                        <span class="dd-btn-text">{typeSummary}</span>
+                                        <lightning-icon icon-name="utility:down" size="xx-small"></lightning-icon>
+                                    </button>
+                                    <div class="slds-dropdown slds-dropdown_left slds-dropdown_fluid dd-panel">
+                                        <template if:true={hasTypeSelection}>
+                                            <button type="button" class="dd-clear" onclick={handleTypesClear}>Clear all</button>
+                                        </template>
+                                        <ul class="slds-dropdown__list" role="menu">
+                                            <template for:each={typeItems} for:item="o">
+                                                <li key={o.value} class="slds-dropdown__item dd-item" role="presentation">
+                                                    <lightning-input type="checkbox" label={o.label} data-value={o.value} checked={o.checked} onchange={handleTypeToggle}></lightning-input>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </template>
                 </div>
             </template>

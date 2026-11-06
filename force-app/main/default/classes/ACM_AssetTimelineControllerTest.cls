@@ -164,6 +164,8 @@ private class ACM_AssetTimelineControllerTest {
         System.assertEquals(0, inCentre.size(), 'one character is not searched');
         inCentre = (List<Object>) JSON.deserializeUntyped(ACM_AssetTimelineController.searchAssets('T Co', centreId));
         System.assertEquals(1, inCentre.size(), 'the unlocated asset is outside the centre');
+        inCentre = (List<Object>) JSON.deserializeUntyped(ACM_AssetTimelineController.searchAssets('T Co', centreId + ',' + centreId));
+        System.assertEquals(1, inCentre.size(), 'a comma separated list of locations is accepted');
         List<Object> all = (List<Object>) JSON.deserializeUntyped(ACM_AssetTimelineController.searchAssets('T Co', null));
         System.assertEquals(2, all.size());
     }
@@ -188,7 +190,7 @@ private class ACM_AssetTimelineControllerTest {
         List<Map<String, Object>> wos = ACM_AssetTimelineController.workOrderMaps(new List<WorkOrder>{ unsched, sched, marker, undated }, sas);
         System.assertEquals(3, wos.size(), 'undated work order is skipped');
         System.assertEquals(assetId, (Id) wos[0].get('assetId'));
-        System.assertEquals('ppm', wos[0].get('workTypeGroup'));
+        System.assertEquals('maintenance', wos[0].get('workTypeGroup'));
         System.assertEquals(false, wos[0].get('scheduled'));
         System.assertEquals(due.getTime() - 7200000, wos[0].get('startMs'), 'unscheduled box ends on the due date');
         System.assertEquals(due.getTime(), wos[0].get('endMs'));
@@ -214,7 +216,20 @@ private class ACM_AssetTimelineControllerTest {
         System.assertEquals('inprogress', ACM_AssetTimelineController.statusGroup('None', 'InProgress'), 'SA category None falls back to the WO');
         System.assertEquals('completed', ACM_AssetTimelineController.statusGroup('Scheduled', 'Completed'), 'a closed WO wins over its SA');
         System.assertEquals('cancelled', ACM_AssetTimelineController.statusGroup('Dispatched', 'Canceled'));
-        System.assertEquals('reactive', ACM_AssetTimelineController.workTypeGroup('Reactive – HVAC'));
+        System.assertEquals('other', ACM_AssetTimelineController.workTypeGroup(null));
+        System.assertEquals('other', ACM_AssetTimelineController.workTypeGroup('Workpack'));
+        System.assertEquals('repair', ACM_AssetTimelineController.workTypeGroup('MEL-SEED Repair – Hydraulic'));
+        System.assertEquals('repair', ACM_AssetTimelineController.workTypeGroup('Corrective Maintenance'), 'repair wins over maintenance');
+        System.assertEquals('repair', ACM_AssetTimelineController.workTypeGroup('❗Emergency Repairs'));
+        System.assertEquals('inspection', ACM_AssetTimelineController.workTypeGroup('MEL-SEED Telemetry Review'));
+        System.assertEquals('inspection', ACM_AssetTimelineController.workTypeGroup('WPC-SEED HT Condition Investigation'));
+        System.assertEquals('inspection', ACM_AssetTimelineController.workTypeGroup('QA Testing'));
+        System.assertEquals('project', ACM_AssetTimelineController.workTypeGroup('Deinstallation'));
+        System.assertEquals('project', ACM_AssetTimelineController.workTypeGroup('Upgrade'));
+        System.assertEquals('maintenance', ACM_AssetTimelineController.workTypeGroup('Wagon PM01'));
+        System.assertEquals('maintenance', ACM_AssetTimelineController.workTypeGroup('PPM – Critical'));
+        System.assertEquals('maintenance', ACM_AssetTimelineController.workTypeGroup('SAP Standard Maintenance'));
+        System.assertEquals('other', ACM_AssetTimelineController.workTypeGroup('Capmark audit'), 'pm inside a word does not match');
     }
 
     @IsTest
